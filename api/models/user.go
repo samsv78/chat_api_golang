@@ -9,6 +9,7 @@ import (
 
 	"github.com/badoux/checkmail"
 	"github.com/jinzhu/gorm"
+	"github.com/samsv78/chat_api_golang/api/dto"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -158,4 +159,18 @@ func (u *User) DeleteAUser(db *gorm.DB, uid uint32) (int64, error) {
 		return 0, db.Error
 	}
 	return db.RowsAffected, nil
+}
+
+func GetUserInfo(db *gorm.DB, uid uint32) (dto.UserInfo, error){
+	user := User{}
+	u, err := user.FindUserByID(db, uid)
+	user = *u
+	if err != nil{
+		return dto.UserInfo{}, err
+	}
+	userInfo := dto.UserInfo{
+		ID: user.ID,
+		Nickname: user.Nickname,
+	}
+	return userInfo, err
 }
