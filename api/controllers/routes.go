@@ -19,4 +19,6 @@ func (s *Server) initializeRoutes() {
 
 	//message routes
 	s.Router.HandleFunc("/message", middlewares.SetMiddlewareAuthentication(s.SendMessage)).Methods("POST")
+	s.Router.HandleFunc("/message/chatrooms", middlewares.SetMiddlewareAuthentication(s.GetChatRooms)).Methods("GET")
+	s.Router.HandleFunc("/message/chatrooms/{otherUserID}", middlewares.SetMiddlewareAuthentication(s.GetChatRoom)).Methods("GET")
 }

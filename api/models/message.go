@@ -32,21 +32,18 @@ func (m *Message) SaveMessage(db *gorm.DB) (error) {
 	return nil
 }
 
-func (m *Message) GetMessageInfo(db *gorm.DB) (dto.MessageInfo, error){
-	senderInfo, err := GetUserInfo(db, m.SenderID)
-	if err != nil{
-		return dto.MessageInfo{}, err
+func GetMessagesOfTwoUsers(db *gorm.DB, userID1 uint32, userID2 uint32)([]Message, error){
+	messages := []Message{}
+	if result := db.Where("sender_id = ? AND receiver_id = ? OR sender_id = ? AND receiver_id = ?", userID1, userID2, userID2, userID1).Find(&messages); result.Error != nil {
+		return messages, result.Error
 	}
-	receiverInfo, err := GetUserInfo(db, m.ReceiverID)
-	if err != nil{
-		return dto.MessageInfo{}, err
+	return messages, nil
+}
+
+func GetMessagesByUserID(db *gorm.DB, userID uint32)([]Message, error){
+	messages := []Message{}
+	if result := db.Select("sender_id, receiver_id").Where("sender_id = ? OR receiver_id = ?", userID, userID).Find(&messages); result.Error != nil {
+		return messages, result.Error
 	}
-	messageInfo := dto.MessageInfo{
-		ID: m.ID,
-		Text: m.Text,
-		SendDate: m.SendDate,
-		Sender: senderInfo,
-		Receiver: receiverInfo,
-	}
-	return messageInfo, nil
+	return messages, nil
 }
