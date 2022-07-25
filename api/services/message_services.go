@@ -1,7 +1,11 @@
 package services
 
 import (
+	"fmt"
+	"log"
+
 	"github.com/jinzhu/gorm"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/samsv78/chat_api_golang/api/dto"
 	"github.com/samsv78/chat_api_golang/api/helpers"
 	"github.com/samsv78/chat_api_golang/api/models"
@@ -35,7 +39,6 @@ func FindOtherUserIds(messages []models.Message, userID uint32)([]uint32){
 	}
 	otherUserIDs = helpers.RemoveDuplicate(otherUserIDs)
 	return otherUserIDs
-
 }
 
 func GetChatRoomInfo(db *gorm.DB, userID uint32, otherUserID uint32)(dto.ChatRoomInfo, error){
@@ -100,3 +103,52 @@ func GetMessageInfo(db *gorm.DB, m models.Message) (dto.MessageInfo, error){
 	return messageInfo, nil
 }
 
+func SignalViaRabbit(senderID uint32, receiverID uint32)(error){
+	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	if err != nil{
+		return err
+	}
+	// failOnError(err, "Failed to connect to RabbitMQ")
+	defer conn.Close()
+
+	ch, err := conn.Channel()
+	if err != nil{
+		return err
+	}
+	// failOnError(err, "Failed to open a channel")
+	defer ch.Close()
+
+	err = ch.ExchangeDeclare(
+		"logs_direct", // name
+		"direct",      // type
+		false,         // durable
+		false,         // auto-deleted
+		false,         // internal
+		false,         // no-wait
+		nil,           // arguments
+	)
+	if err != nil{
+		return err
+	}
+	// failOnError(err, "Failed to declare an exchange")
+
+	// send message 
+	strSenderID := fmt.Sprint(senderID)
+	strReceiverID := fmt.Sprint(receiverID)
+	body := strSenderID + "," + strReceiverID
+	err = ch.Publish(
+		"logs_direct", // exchange
+		strReceiverID, // routing key
+		false,		   // mandatory
+		false,         // immediate
+		amqp.Publishing{
+			ContentType: "text/plain",
+			Body:        []byte(body),
+		})
+	if err != nil{
+		return err
+	}
+	// failOnError(err, "Failed to publish a message")
+	log.Printf(" [x] Sent %s", body)
+	return nil
+}

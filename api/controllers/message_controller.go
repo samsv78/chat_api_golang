@@ -45,8 +45,10 @@ func (server *Server) SendMessage(w http.ResponseWriter, r *http.Request) {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	
-	//signal via rabbitmq
+
+	//send signal to client via rabbit{
+	err = services.SignalViaRabbit(uid, request.ReceiverID)
+	//}
 
 	messageInfo.ID = message.ID
 	responses.JSON(w, http.StatusCreated, messageInfo)

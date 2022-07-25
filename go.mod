@@ -14,5 +14,6 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/joho/godotenv v1.4.0
+	github.com/rabbitmq/amqp091-go v1.4.0
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
 )
