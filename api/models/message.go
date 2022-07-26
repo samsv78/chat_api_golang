@@ -9,7 +9,7 @@ import (
 
 type Message struct{
 	ID         uint32    `gorm:"primary_key;auto_increment" json:"message_id"`
-	Text       string    `gorm:"size:255;not null;unique" json:"text"`
+	Text       string    `gorm:"size:255;not null;" json:"text"`
 	SendDate   time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"send_date"`
 	SenderID   uint32    `gorm:"not null" json:"sender_id"`
 	ReceiverID uint32    `gorm:"not null" json:"receiver_id"`
