@@ -108,18 +108,16 @@ func SignalViaRabbit(senderID uint32, receiverID uint32)(error){
 	if err != nil{
 		return err
 	}
-	// failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
 
 	ch, err := conn.Channel()
 	if err != nil{
 		return err
 	}
-	// failOnError(err, "Failed to open a channel")
 	defer ch.Close()
 
 	err = ch.ExchangeDeclare(
-		"logs_direct", // name
+		"direct_logs", // name
 		"direct",      // type
 		false,         // durable
 		false,         // auto-deleted
@@ -130,14 +128,13 @@ func SignalViaRabbit(senderID uint32, receiverID uint32)(error){
 	if err != nil{
 		return err
 	}
-	// failOnError(err, "Failed to declare an exchange")
 
 	// send message 
 	strSenderID := fmt.Sprint(senderID)
 	strReceiverID := fmt.Sprint(receiverID)
 	body := strSenderID + "," + strReceiverID
 	err = ch.Publish(
-		"logs_direct", // exchange
+		"direct_logs", // exchange
 		strReceiverID, // routing key
 		false,		   // mandatory
 		false,         // immediate
@@ -148,7 +145,6 @@ func SignalViaRabbit(senderID uint32, receiverID uint32)(error){
 	if err != nil{
 		return err
 	}
-	// failOnError(err, "Failed to publish a message")
 	log.Printf(" [x] Sent %s", body)
 	return nil
 }
