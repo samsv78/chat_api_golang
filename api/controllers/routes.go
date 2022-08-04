@@ -4,6 +4,7 @@ import "github.com/samsv78/chat_api_golang/api/middlewares"
 
 func (s *Server) initializeRoutes() {
 
+	s.Router.HandleFunc("/ws", s.wsEnpoint)
 	// home route
 	s.Router.HandleFunc("/", middlewares.SetMiddlewareJSON(s.Home)).Methods("GET")
 

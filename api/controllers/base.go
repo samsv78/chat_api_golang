@@ -7,14 +7,17 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres" //postgres database driver
 	"github.com/samsv78/chat_api_golang/api/models"
 )
 
 type Server struct {
-	DB     *gorm.DB
-	Router *mux.Router
+	DB                  *gorm.DB
+	Router              *mux.Router
+	ConnectedClientsIds []string
+	WSConnections       []*websocket.Conn
 }
 
 func (server *Server) Initialize(Dbdriver, DbUser, DbPassword, DbPort, DbHost, DbName string) {
@@ -40,8 +43,10 @@ func (server *Server) Initialize(Dbdriver, DbUser, DbPassword, DbPort, DbHost, D
 
 func (server *Server) Run(addr string) {
 	fmt.Println("Listening to port" + addr)
-	headers := handlers.AllowedHeaders([]string{"X-Requested-With","Content-Type","Authorization"})
-	methods := handlers.AllowedMethods([]string{"GET","POST", "PUT", "DELETE"})
+	headers := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
+	methods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
 	origins := handlers.AllowedOrigins([]string{"*"})
+	server.ConnectedClientsIds = []string{}
+	server.WSConnections = []*websocket.Conn{}
 	log.Fatal(http.ListenAndServe(addr, handlers.CORS(headers, methods, origins)(server.Router)))
 }

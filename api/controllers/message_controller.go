@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/samsv78/chat_api_golang/api/auth"
 	"github.com/samsv78/chat_api_golang/api/dto"
+	"github.com/samsv78/chat_api_golang/api/helpers"
 	"github.com/samsv78/chat_api_golang/api/models"
 	"github.com/samsv78/chat_api_golang/api/responses"
 	"github.com/samsv78/chat_api_golang/api/services"
@@ -47,7 +48,20 @@ func (server *Server) SendMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//send signal to client via rabbit{
-	err = services.SignalViaRabbit(uid, request.ReceiverID)
+	// err = services.SignalViaRabbit(uid, request.ReceiverID)
+	//}
+
+	//send signal to client via ws{
+	//check if connected?
+	res, index := helpers.ContainsString(server.ConnectedClientsIds, strconv.Itoa(int(request.ReceiverID)))
+	if res {
+		wsConn := server.WSConnections[index]
+		err = wsConn.WriteMessage(1, []byte("RELOAD"))
+		if err != nil {
+			responses.ERROR(w, http.StatusUnprocessableEntity, err)
+			return
+		}
+	}
 	//}
 
 	messageInfo.ID = message.ID
@@ -81,7 +95,7 @@ func (server *Server) GetChatRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	chatRoom, err := services.GetChatRoomInfo(server.DB, userID, uint32(otherUserID))
-	if err != nil{
+	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
